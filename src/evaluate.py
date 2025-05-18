@@ -1,3 +1,5 @@
+# src/evaluate.py
+
 import os
 import torch
 from sklearn.metrics import classification_report
@@ -6,13 +8,11 @@ from transformers import AutoTokenizer
 from src.model import BertForTokenClassification
 from src.data_utils import load_from_jsonl
 
-
 def collapse_bio_tags(tag: str) -> str:
     """Convert BIO tag to entity type, keeping 'O' unchanged."""
     if tag == "O":
         return "O"
     return tag.split("-")[-1]  # Keeps only "PER" from "B-PER", etc.
-
 
 def evaluate_model(
     eval_file: str,
@@ -25,10 +25,9 @@ def evaluate_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # Load Tokenizer and Model
+    # Load Tokenizer and Model from saved directory
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
-    model = BertForTokenClassification(model_name=model_dir, num_labels=len(label_to_id))
-    model.load_state_dict(torch.load(os.path.join(model_dir, "model_state_dict.pt")))
+    model = BertForTokenClassification.from_pretrained(model_dir)
     model.to(device)
     model.eval()
 
@@ -54,7 +53,6 @@ def evaluate_model(
             for true, pred, mask in zip(batch["ner_tags"], predictions, batch["attention_mask"]):
                 true = true[mask.bool()].cpu().tolist()
                 pred = pred[mask.bool()].cpu().tolist()
-                # Filter out -100 labels (ignored tokens)
                 filtered = [(t, p) for t, p in zip(true, pred) if t != -100]
                 if filtered:
                     t_labels, p_labels = zip(*filtered)

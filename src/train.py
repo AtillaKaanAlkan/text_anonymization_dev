@@ -66,7 +66,7 @@ def train_model(
         avg_epoch_loss = epoch_loss / len(dataloader)
         print(f"Average Loss: {avg_epoch_loss:.4f}")
 
-        # Evaluation after each epoch
+        # Optional Evaluation after each epoch
         if eval_file:
             print("\nRunning evaluation on validation set...")
             report_text = evaluate_model(
@@ -77,20 +77,37 @@ def train_model(
                 max_length=max_length
             )
 
-            # Parse F1-score from the report text
+            # Extract F1-score from the evaluation report
             f1_line = [line for line in report_text.strip().split("\n") if "weighted avg" in line]
             if f1_line:
-                f1_score = float(f1_line[0].split()[-2])
-                print(f"F1-score: {f1_score}")
+                try:
+                    f1_score = float(f1_line[0].split()[-2])
+                    print(f"F1-score: {f1_score}")
 
-                # Save the best model based on F1-score
-                if f1_score > best_f1:
-                    best_f1 = f1_score
-                    print("New best model found. Saving model...")
+                    if f1_score > best_f1:
+                        best_f1 = f1_score
+                        print("New best model found. Saving model...")
+                        save_model(model, tokenizer, output_dir)
+                except Exception as e:
+                    print(f"Warning: Failed to parse F1-score. {e}")
 
-                    os.makedirs(output_dir, exist_ok=True)
-                    model.bert.save_pretrained(output_dir)
-                    tokenizer.save_pretrained(output_dir)
-                    torch.save(model.state_dict(), os.path.join(output_dir, "model_state_dict.pt"))
-
+    # Save final model state regardless of evaluation results
+    print("Saving final model state...")
+    save_model(model, tokenizer, output_dir)
     print(f"\nTraining completed. Best F1-score: {best_f1:.4f}")
+
+
+def save_model(model, tokenizer, output_dir):
+    """
+    Save model and tokenizer to disk.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Save the BERT backbone
+    model.bert.save_pretrained(output_dir)
+
+    # Save tokenizer
+    tokenizer.save_pretrained(output_dir)
+
+    # Save classification head weights separately
+    torch.save(model.state_dict(), os.path.join(output_dir, "model_state_dict.pt"))
