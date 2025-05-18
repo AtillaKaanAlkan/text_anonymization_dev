@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pkl
+*.pt
+*.bin
+*.h5
+*.log
+.env
+.venv/
+venv/
+models/
+example_demo/
