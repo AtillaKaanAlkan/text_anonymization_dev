@@ -52,6 +52,7 @@ class Anonymizer:
             for word, label_id in zip(words, predictions[:len(words)])
         ]
 
+        print((tokens, predicted_entities))
         return predicted_entities
 
     def anonymize(self, text: str) -> str:
