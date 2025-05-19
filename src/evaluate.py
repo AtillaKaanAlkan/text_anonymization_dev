@@ -4,7 +4,7 @@ import os
 import torch
 from sklearn.metrics import classification_report
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModel
 from src.model import BertForTokenClassification
 from src.data_utils import load_from_jsonl
 
@@ -27,7 +27,10 @@ def evaluate_model(
 
     # Load Tokenizer and Model from saved directory
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
-    model = BertForTokenClassification.from_pretrained(model_dir)
+    backbone_model = AutoModel.from_pretrained(model_dir)
+    model = BertForTokenClassification(model_name=model_dir, num_labels=len(label_to_id))
+    model.bert = backbone_model 
+    model.load_state_dict(torch.load(os.path.join(model_dir, "model_state_dict.pt")))
     model.to(device)
     model.eval()
 
