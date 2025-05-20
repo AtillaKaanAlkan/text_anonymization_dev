@@ -47,7 +47,7 @@ def test_model_can_predict_labels(model_name):
     
     # Load corresponding tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    sample_text = "John Doe lives in New York."
+    sample_text = "Albert Einstein est né en Allemagne."
 
     # Tokenize input
     tokens = tokenizer(sample_text, return_tensors="pt")
